@@ -8,10 +8,13 @@ class AppNameTextWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      period: Duration(seconds: 22),
-      baseColor: Colors.purple,
-      highlightColor: Colors.red,
-      child: TitlesTextWidget(label: "Miso's Shop", fontSize: fontSize),
+      period: const Duration(seconds: 22),
+      baseColor: const Color.fromARGB(255, 39, 94, 176),
+      highlightColor: const Color.fromARGB(129, 214, 10, 204),
+      child: TitlesTextWidget(
+        label: "Miso's Shop",
+        fontSize: fontSize,
+      ),
     );
   }
 }

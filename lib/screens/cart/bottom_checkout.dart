@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:simple_ecommerce_app/widgets/subtitle_text.dart';
 import 'package:simple_ecommerce_app/widgets/title_text.dart';
 
-class CartBottomSheetWidget extends StatelessWidget {
-  const CartBottomSheetWidget({super.key});
+import '../../providers/cart_provider.dart';
+import '../../providers/products_provider.dart';
 
+class CartBottomSheetWidget extends StatelessWidget {
+  const CartBottomSheetWidget({super.key, required this.function});
+  final Function function;
   @override
   Widget build(BuildContext context) {
+    final productsProvider = Provider.of<ProductsProvider>(context);
+    final cartProvider = Provider.of<CartProvider>(context);
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: const Border(top: BorderSide(width: 1, color: Colors.grey)),
+        border: const Border(
+          top: BorderSide(width: 1, color: Colors.grey),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -22,17 +30,25 @@ class CartBottomSheetWidget extends StatelessWidget {
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     FittedBox(
-                      child: TitlesTextWidget(
-                        label: "Total (6 products/9 items)",
-                      ),
+                        child: TitlesTextWidget(
+                            label:
+                                "Total (${cartProvider.getCartitems.length} products/${cartProvider.getQty()} items)")),
+                    SubtitleTextWidget(
+                      label:
+                          "${cartProvider.getTotal(productsProvider: productsProvider).toStringAsFixed(2)}\$",
+                      color: Colors.blue,
                     ),
-                    SubtitleTextWidget(label: "20.53\$", color: Colors.blue),
                   ],
                 ),
               ),
-              ElevatedButton(onPressed: () {}, child: Text("Checkout")),
+              ElevatedButton(
+                onPressed: () async {
+                  await function();
+                },
+                child: const Text("Checkout"),
+              ),
             ],
           ),
         ),

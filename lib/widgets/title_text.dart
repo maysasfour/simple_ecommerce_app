@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class TitlesTextWidget extends StatelessWidget {
   const TitlesTextWidget({
@@ -13,13 +13,12 @@ class TitlesTextWidget extends StatelessWidget {
   final double fontSize;
   final Color? color;
   final int? maxLines;
-
   @override
   Widget build(BuildContext context) {
     return Text(
       label,
-      maxLines: 4,
-
+      maxLines: maxLines,
+      // textAlign: TextAlign.justify,
       style: TextStyle(
         color: color,
         fontSize: fontSize,
