@@ -42,7 +42,16 @@ jobs:
           fi
 
       - name: Build web
-        run: flutter build web --release --base-href /simple_ecommerce_app/
+        shell: bash
+        run: |
+          set +e
+          flutter build web --release --base-href /simple_ecommerce_app/ 2>&1 | tee flutter-build.log
+          build_status=${PIPESTATUS[0]}
+          if [ "$build_status" -ne 0 ]; then
+            message=$(tail -n 60 flutter-build.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g')
+            echo "::error title=Flutter web build failed::$message"
+            exit "$build_status"
+          fi
 
       - name: Disable Jekyll
         run: touch build/web/.nojekyll
