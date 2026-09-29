@@ -30,7 +30,16 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get --enforce-lockfile
+        shell: bash
+        run: |
+          set +e
+          flutter pub get --enforce-lockfile 2>&1 | tee pub-get.log
+          pub_status=${PIPESTATUS[0]}
+          if [ "$pub_status" -ne 0 ]; then
+            message=$(tail -n 40 pub-get.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g')
+            echo "::error title=Flutter dependency resolution failed::$message"
+            exit "$pub_status"
+          fi
 
       - name: Build web
         run: flutter build web --release --base-href /simple_ecommerce_app/
