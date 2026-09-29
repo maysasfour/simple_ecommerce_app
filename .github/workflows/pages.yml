@@ -30,17 +30,7 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: |
-          rm -f pubspec.lock
-          if ! flutter pub get 2>&1 | tee pub-get.log; then
-            {
-              echo '## flutter pub get failed'
-              echo '```text'
-              tail -n 120 pub-get.log
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
+        run: flutter pub get --enforce-lockfile
 
       - name: Build web
         run: flutter build web --release --base-href /simple_ecommerce_app/
