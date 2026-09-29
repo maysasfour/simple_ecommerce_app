@@ -1,13 +1,12 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_ecommerce_app/consts/app_constants.dart';
 import 'package:simple_ecommerce_app/models/product_model.dart';
 import 'package:simple_ecommerce_app/providers/products_provider.dart';
+import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
 
-import '../services/assets_manager.dart';
 import '../widgets/products/product_widget.dart';
 import '../widgets/title_text.dart';
-import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
 
 class SearchScreen extends StatefulWidget {
   static const routeName = '/SearchScreen';
@@ -18,131 +17,222 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  late TextEditingController searchTextController;
+  late TextEditingController _searchController;
+  String _selectedCategory = 'All';
+  String _sortOption = 'Newest';
+
+  static const _sortOptions = ['Newest', 'Price: Low–High', 'Price: High–Low'];
 
   @override
   void initState() {
-    searchTextController = TextEditingController();
     super.initState();
+    _searchController = TextEditingController();
+    _searchController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    searchTextController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  List<ProductModel> productListSearch = [];
+  List<ProductModel> _applyFilters(List<ProductModel> all) {
+    // Category filter
+    final catFiltered = _selectedCategory == 'All'
+        ? all
+        : all
+            .where((p) => p.productCategory
+                .toLowerCase()
+                .contains(_selectedCategory.toLowerCase()))
+            .toList();
+
+    // Search filter
+    final query = _searchController.text.trim().toLowerCase();
+    final searched = query.isEmpty
+        ? catFiltered
+        : catFiltered
+            .where((p) => p.productTitle.toLowerCase().contains(query))
+            .toList();
+
+    // Sort
+    switch (_sortOption) {
+      case 'Price: Low–High':
+        searched.sort(
+            (a, b) => double.parse(a.productPrice).compareTo(double.parse(b.productPrice)));
+        break;
+      case 'Price: High–Low':
+        searched.sort(
+            (a, b) => double.parse(b.productPrice).compareTo(double.parse(a.productPrice)));
+        break;
+      default: // Newest — keep original order
+        break;
+    }
+    return searched;
+  }
+
   @override
   Widget build(BuildContext context) {
     final productsProvider =
         Provider.of<ProductsProvider>(context, listen: false);
-    String? passedCategory =
-        ModalRoute.of(context)!.settings.arguments as String?;
-    List<ProductModel> productList = passedCategory == null
-        ? productsProvider.products
-        : productsProvider.findByCategory(categoryName: passedCategory);
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    // Support category passed via route arguments
+    final passedCategory =
+        ModalRoute.of(context)?.settings.arguments as String?;
+    if (passedCategory != null && _selectedCategory == 'All') {
+      _selectedCategory = passedCategory;
+    }
+
+    final allProducts = productsProvider.products;
+    final results = _applyFilters(allProducts);
+
+    final categories = ['All', ...AppConstants.categoriesList.map((c) => c.name)];
+
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(
-              AssetsManager.shoppingCart,
-            ),
-          ),
-          title: TitlesTextWidget(label: passedCategory ?? "Search products"),
+          title: const TitlesTextWidget(label: 'Search & Browse'),
         ),
-        body: productList.isEmpty
-            ? const Center(child: TitlesTextWidget(label: "No product found"))
-            : StreamBuilder<List<ProductModel>>(
-                stream: productsProvider.fetchProductsStream(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (snapshot.hasError) {
-                    return Center(
-                      child: SelectableText(snapshot.error.toString()),
-                    );
-                  } else if (snapshot.data == null) {
-                    return const Center(
-                      child: SelectableText("No products has been added"),
-                    );
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 15.0,
-                        ),
-                        TextField(
-                          controller: searchTextController,
-                          decoration: InputDecoration(
-                            hintText: "Search",
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: GestureDetector(
-                              onTap: () {
-                                // setState(() {
-                                FocusScope.of(context).unfocus();
-                                searchTextController.clear();
-                                // });
-                              },
-                              child: const Icon(
-                                Icons.clear,
-                                color: Colors.red,
-                              ),
+        body: Column(
+          children: [
+            // ── Search box ──────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.red),
+                          onPressed: () => _searchController.clear(),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Theme.of(context).cardColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+              ),
+            ),
+
+            // ── Sort Row ────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  const Icon(Icons.sort, size: 18, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _sortOptions.map((opt) {
+                          final selected = opt == _sortOption;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(opt,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        selected ? Colors.white : null,
+                                  )),
+                              selected: selected,
+                              selectedColor: Theme.of(context).primaryColor,
+                              onSelected: (_) =>
+                                  setState(() => _sortOption = opt),
                             ),
-                          ),
-                          // onChanged: (value) {
-                          //   setState(() {
-                          //     productListSearch = productsProvider.searchQuery(
-                          //         searchText: searchTextController.text);
-                          //   });
-                          // },
-                          onSubmitted: (value) {
-                            setState(() {
-                              productListSearch = productsProvider.searchQuery(
-                                  searchText: searchTextController.text,
-                                  passedList: productList);
-                            });
-                          },
-                        ),
-                        const SizedBox(
-                          height: 15.0,
-                        ),
-                        if (searchTextController.text.isNotEmpty &&
-                            productListSearch.isEmpty) ...[
-                          const Center(
-                            child: TitlesTextWidget(label: "No products found"),
-                          ),
-                        ],
-                        Expanded(
-                          child: DynamicHeightGridView(
-                            itemCount: searchTextController.text.isNotEmpty
-                                ? productListSearch.length
-                                : productList.length,
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            builder: (context, index) {
-                              return ProductWidget(
-                                productId: searchTextController.text.isNotEmpty
-                                    ? productListSearch[index].productId
-                                    : productList[index].productId,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Category Chips ───────────────────────────────────────────────
+            SizedBox(
+              height: 48,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final cat = categories[index];
+                  final selected = cat == _selectedCategory;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(cat,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: selected ? Colors.white : null,
+                          )),
+                      selected: selected,
+                      selectedColor: Theme.of(context).primaryColor,
+                      checkmarkColor: Colors.white,
+                      onSelected: (_) =>
+                          setState(() => _selectedCategory = cat),
                     ),
                   );
-                }),
+                },
+              ),
+            ),
+
+            // ── Results count ────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+              child: Row(
+                children: [
+                  Text(
+                    '${results.length} products found',
+                    style: const TextStyle(
+                        fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Product grid ─────────────────────────────────────────────────
+            Expanded(
+              child: results.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.search_off,
+                              size: 64, color: Colors.grey),
+                          SizedBox(height: 12),
+                          TitlesTextWidget(label: 'No products found'),
+                        ],
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: DynamicHeightGridView(
+                        itemCount: results.length,
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        builder: (context, index) {
+                          return ProductWidget(
+                            productId: results[index].productId,
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

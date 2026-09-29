@@ -39,7 +39,12 @@ class ProductsProvider with ChangeNotifier {
     return searchList;
   }
 
-  final productDb = FirebaseFirestore.instance.collection("products");
+  FirebaseFirestore? _firestore;
+  void setFirestore(FirebaseFirestore firestore) => _firestore = firestore;
+
+  CollectionReference get productDb => 
+    (_firestore ?? FirebaseFirestore.instance).collection("products");
+
   Future<List<ProductModel>> fetchProducts() async {
     try {
       await productDb

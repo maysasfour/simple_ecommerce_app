@@ -11,15 +11,18 @@ class OrdersModelAdvanced with ChangeNotifier {
   final String imageUrl;
   final String quantity;
   final Timestamp orderDate;
+  final String? status;
 
-  OrdersModelAdvanced(
-      {required this.orderId,
-      required this.userId,
-      required this.productId,
-      required this.productTitle,
-      required this.userName,
-      required this.price,
-      required this.imageUrl,
-      required this.quantity,
-      required this.orderDate});
+  OrdersModelAdvanced({
+    required this.orderId,
+    required this.userId,
+    required this.productId,
+    required this.productTitle,
+    required this.userName,
+    required this.price,
+    required this.imageUrl,
+    required this.quantity,
+    required this.orderDate,
+    this.status,
+  });
 }

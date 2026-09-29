@@ -1,30 +1,55 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Widget smoke tests for ShopSmart EN
+// These tests verify top-level app structure without requiring Firebase.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:simple_ecommerce_app/consts/validator.dart';
+import 'package:simple_ecommerce_app/models/product_model.dart';
+import 'package:simple_ecommerce_app/providers/cart_provider.dart';
+import 'package:simple_ecommerce_app/providers/products_provider.dart';
 
-import 'package:simple_ecommerce_app/main.dart';
-
+/// Smoke test: validates that all key classes are importable and instantiable.
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('App smoke tests', () {
+    test('CartProvider can be instantiated', () {
+      final cart = CartProvider();
+      expect(cart, isNotNull);
+      expect(cart.getCartitems.isEmpty, isTrue);
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('ProductsProvider can be instantiated', () {
+      final provider = ProductsProvider();
+      expect(provider, isNotNull);
+      expect(provider.getProducts.isEmpty, isTrue);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('ProductModel can be created manually', () {
+      final p = ProductModel(
+        productId: 'test-001',
+        productTitle: 'Test Product',
+        productPrice: '29.99',
+        productCategory: 'Electronics',
+        productDescription: 'A test product',
+        productImage: 'https://example.com/image.jpg',
+        productQuantity: '100',
+      );
+      expect(p.productId, 'test-001');
+      expect(p.productPrice, '29.99');
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('email validator accepts valid email', () {
+      expect(MyValidators.emailValidator('admin@shopsmart.com'), isNull);
+    });
+
+    test('password validator rejects weak password', () {
+      expect(MyValidators.passwordValidator('123'), isNotNull);
+    });
+
+    test('price validator accepts valid price', () {
+      expect(MyValidators.priceValidator('49.99'), isNull);
+    });
+
+    test('quantity validator accepts zero', () {
+      expect(MyValidators.quantityValidator('0'), isNull);
+    });
   });
 }

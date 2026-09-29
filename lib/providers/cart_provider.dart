@@ -13,8 +13,17 @@ class CartProvider with ChangeNotifier {
     return _cartItems;
   }
 
-  final userstDb = FirebaseFirestore.instance.collection("users");
-  final _auth = FirebaseAuth.instance;
+  FirebaseFirestore? _firestore;
+  FirebaseAuth? _authOverride;
+  void setDependencies({FirebaseFirestore? firestore, FirebaseAuth? auth}) {
+    _firestore = firestore;
+    _authOverride = auth;
+  }
+
+  CollectionReference get userstDb =>
+      (_firestore ?? FirebaseFirestore.instance).collection("users");
+  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
+
 // Firebase
   Future<void> addToCartFirebase({
     required String productId,
@@ -57,7 +66,7 @@ class CartProvider with ChangeNotifier {
     }
     try {
       final userDoc = await userstDb.doc(user.uid).get();
-      final data = userDoc.data();
+      final data = userDoc.data() as Map<String, dynamic>?;
       if (data == null || !data.containsKey('userCart')) {
         return;
       }

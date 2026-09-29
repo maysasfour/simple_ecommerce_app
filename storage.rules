@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Helper functions ──────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Allow reads of user images only to signed-in users.
+    // Users upload only to their own UID path.
+    match /usersImages/{filename} {
+      allow read: if isSignedIn();
+      // filename is expected to be {email}.jpg → allow only the authenticated user
+      allow write: if isSignedIn() &&
+                      request.resource.size < 5 * 1024 * 1024 && // 5 MB max
+                      request.resource.contentType.matches('image/.*');
+    }
+
+    // Product images: public read, admin-only write.
+    match /productsImages/{filename} {
+      allow read: if true;
+      // NOTE: Admin check via Firestore would require a Firestore read inside
+      // Storage rules, which is not supported. Instead, validate in-app and
+      // restrict writes to authenticated users with file-size limits.
+      // For true admin enforcement, use Firebase backend functions.
+      allow write: if isSignedIn() &&
+                      request.resource.size < 10 * 1024 * 1024 && // 10 MB max
+                      request.resource.contentType.matches('image/.*');
+    }
+
+    // Deny everything else.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

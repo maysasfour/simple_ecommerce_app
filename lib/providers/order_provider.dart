@@ -32,6 +32,9 @@ class OrderProvider with ChangeNotifier {
               imageUrl: element.get('imageUrl'),
               userName: element.get('userName'),
               orderDate: element.get('orderDate'),
+              status: element.data().containsKey('status')
+                  ? element.get('status') as String?
+                  : 'Placed',
             ),
           );
         }

@@ -51,7 +51,7 @@ class _ProductWidgetState extends State<ProductWidget> {
                     borderRadius: BorderRadius.circular(12.0),
                     child: FancyShimmerImage(
                       imageUrl: getCurrProduct.productImage,
-                      height: size.height * 0.22,
+                      height: size.height * 0.15,
                       width: double.infinity,
                     ),
                   ),

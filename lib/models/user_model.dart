@@ -5,6 +5,8 @@ class UserModel with ChangeNotifier {
   final String userId, userName, userImage, userEmail;
   final Timestamp createdAt;
   final List userCart, userWish;
+  final bool isAdmin;
+
   UserModel({
     required this.userId,
     required this.userName,
@@ -13,5 +15,6 @@ class UserModel with ChangeNotifier {
     required this.userCart,
     required this.userWish,
     required this.createdAt,
+    this.isAdmin = false,
   });
 }

@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────
+
+    /// Returns true if the caller is authenticated.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /// Returns true if the caller is operating on their own document.
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    /// Returns true if the caller has isAdmin == true in their user doc.
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    /// Returns true if all required fields are present in the request data.
+    function hasRequiredProductFields() {
+      return request.resource.data.keys().hasAll([
+        'productId', 'productTitle', 'productPrice',
+        'productCategory', 'productDescription',
+        'productImage', 'productQuantity'
+      ]);
+    }
+
+    // ── Products ──────────────────────────────────────────────────────────
+    // Anyone can read products (required for the shop to work without login).
+    // Only admins can create, update, or delete products.
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && hasRequiredProductFields();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────
+    // A user can read/write only their own document.
+    // Admins can read any user document.
+    // This demo app allows admin selection during regular signup.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId);
+
+      // Users can update their own doc, but cannot change isAdmin.
+      allow update: if isOwner(userId) &&
+                       !('isAdmin' in request.resource.data) ||
+                       isAdmin(); // Admins can update anything including isAdmin
+
+      allow delete: if isAdmin();
+    }
+
+    // ── Orders ─────────────────────────────────────────────────────────────
+    // Users can read/create their own orders.
+    // Admins can read and update all orders (for status management).
+    match /ordersAdvanced/{orderId} {
+      allow read: if isSignedIn() &&
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin(); // Only admins update order status
+      allow delete: if isAdmin();
+    }
+
+    // ── Cart (stored in user subdocollection) ────────────────────────────
+    // Users manage only their own cart. Admins can read any.
+    match /users/{userId}/cart/{cartId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ── Deny all other access ─────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

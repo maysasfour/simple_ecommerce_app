@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -40,6 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formkey = GlobalKey<FormState>();
   XFile? _pickedImage;
   bool _isLoading = false;
+  bool _registerAsAdmin = false;
   final auth = FirebaseAuth.instance;
   String? userImageUrl;
   @override
@@ -75,13 +74,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _registerFCT() async {
     final isValid = _formkey.currentState!.validate();
     FocusScope.of(context).unfocus();
-    if (_pickedImage == null) {
-      MyAppFunctions.showErrorOrWarningDialog(
-          context: context,
-          subtitle: "Make sure to pick up an image",
-          fct: () {});
-      return;
-    }
     if (isValid) {
       try {
         setState(() {
@@ -95,20 +87,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         final User? user = auth.currentUser;
         final String uid = user!.uid;
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child("usersImages")
-            .child("${_emailController.text.trim()}.jpg");
-        await ref.putFile(File(_pickedImage!.path));
-        userImageUrl = await ref.getDownloadURL();
+        if (_pickedImage != null) {
+          final ref = FirebaseStorage.instance
+              .ref()
+              .child("usersImages")
+              .child("$uid.jpg");
+          await ref.putData(
+            await _pickedImage!.readAsBytes(),
+            SettableMetadata(contentType: 'image/jpeg'),
+          );
+          userImageUrl = await ref.getDownloadURL();
+        }
         await FirebaseFirestore.instance.collection("users").doc(uid).set({
           'userId': uid,
           'userName': _nameController.text,
-          'userImage': userImageUrl,
+          'userImage': userImageUrl ?? '',
           'userEmail': _emailController.text.toLowerCase(),
           'createdAt': Timestamp.now(),
           'userWish': [],
           'userCart': [],
+          'isAdmin': _registerAsAdmin,
         });
         Fluttertoast.showToast(
           msg: "An account has been created",
@@ -186,8 +184,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TitlesTextWidget(label: "Welcome back!"),
-                          SubtitleTextWidget(label: "Your welcome message"),
+                          TitlesTextWidget(label: "Create your account"),
+                          SubtitleTextWidget(label: "Sign up with email and password"),
                         ],
                       )),
                   const SizedBox(
@@ -229,6 +227,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                           validator: (value) {
                             return MyValidators.displayNamevalidator(value);
+                          },
+                        ),
+                        const SizedBox(
+                          height: 16.0,
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          secondary: const Icon(Icons.admin_panel_settings_outlined),
+                          title: const Text('Create as admin'),
+                          subtitle: const Text('Enable store management tools for this account'),
+                          value: _registerAsAdmin,
+                          onChanged: (value) {
+                            setState(() {
+                              _registerAsAdmin = value;
+                            });
                           },
                         ),
                         const SizedBox(

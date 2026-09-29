@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,9 +26,17 @@ class PickImageWidget extends StatelessWidget {
                       ),
                     ),
                   )
-                : Image.file(
-                    File(pickedImage!.path),
-                    fit: BoxFit.fill,
+                : FutureBuilder<Uint8List>(
+                    future: pickedImage!.readAsBytes(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return Image.memory(
+                        snapshot.data!,
+                        fit: BoxFit.cover,
+                      );
+                    },
                   ),
           ),
         ),
@@ -47,7 +55,7 @@ class PickImageWidget extends StatelessWidget {
               child: const Padding(
                 padding: EdgeInsets.all(6.0),
                 child: Icon(
-                  Icons.add_shopping_cart_outlined,
+                  Icons.add_a_photo_outlined,
                   size: 20,
                   color: Colors.white,
                 ),
