@@ -34,6 +34,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final productsProvider = Provider.of<ProductsProvider>(context);
     final String? productId =
         ModalRoute.of(context)!.settings.arguments as String?;
