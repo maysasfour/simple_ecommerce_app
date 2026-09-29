@@ -1,4 +1,3 @@
-import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_ecommerce_app/screens/inner_screen/product_details.dart';
@@ -10,6 +9,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/products_provider.dart';
 import '../../providers/viewed_recently_provider.dart';
 import 'heart_btn.dart';
+import 'product_image.dart';
 
 class ProductWidget extends StatefulWidget {
   const ProductWidget({
@@ -28,7 +28,6 @@ class _ProductWidgetState extends State<ProductWidget> {
     final productsProvider = Provider.of<ProductsProvider>(context);
     final getCurrProduct = productsProvider.findByProdId(widget.productId);
     final cartProvider = Provider.of<CartProvider>(context);
-    Size size = MediaQuery.of(context).size;
     final viewedProdProvider = Provider.of<ViewedProdProvider>(context);
 
     return getCurrProduct == null
@@ -49,9 +48,9 @@ class _ProductWidgetState extends State<ProductWidget> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12.0),
-                    child: FancyShimmerImage(
+                    child: ProductImage(
                       imageUrl: getCurrProduct.productImage,
-                      height: size.height * 0.15,
+                      height: 190,
                       width: double.infinity,
                     ),
                   ),

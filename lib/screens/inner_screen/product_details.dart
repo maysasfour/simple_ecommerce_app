@@ -1,4 +1,3 @@
-import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_ecommerce_app/providers/cart_provider.dart';
@@ -9,6 +8,7 @@ import 'package:simple_ecommerce_app/widgets/products/heart_btn.dart';
 import 'package:simple_ecommerce_app/widgets/subtitle_text.dart';
 import 'package:simple_ecommerce_app/widgets/title_text.dart';
 import 'package:simple_ecommerce_app/widgets/products/product_widget.dart';
+import 'package:simple_ecommerce_app/widgets/products/product_image.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   static const routName = '/ProductDetailsScreen';
@@ -34,7 +34,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final productsProvider = Provider.of<ProductsProvider>(context);
     final String? productId =
         ModalRoute.of(context)!.settings.arguments as String?;
@@ -79,10 +78,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 children: [
                   // Product image
                   ClipRRect(
-                    child: FancyShimmerImage(
+                    child: ProductImage(
                       imageUrl: getCurrProduct.productImage,
-                      height: size.height * 0.38,
+                      height: 420,
                       width: double.infinity,
+                      fit: BoxFit.contain,
                     ),
                   ),
 

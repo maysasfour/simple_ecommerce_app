@@ -28,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final size = MediaQuery.of(context).size;
     final productsProvider = Provider.of<ProductsProvider>(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -50,11 +49,14 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(width: 4),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await productsProvider.fetchProducts();
-        },
-        child: SingleChildScrollView(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await productsProvider.fetchProducts();
+            },
+            child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,9 +66,10 @@ class _HomeScreenState extends State<HomeScreen>
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: size.height * 0.22,
-                    child: Swiper(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SizedBox(
+                      height: constraints.maxWidth >= 700 ? 320 : 190,
+                      child: Swiper(
                       autoplay: true,
                       autoplayDelay: 3500,
                       itemBuilder: (context, index) {
@@ -83,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen>
                           activeSize: 10,
                           size: 7,
                         ),
+                      ),
                       ),
                     ),
                   ),
@@ -184,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen>
                   child: TitlesTextWidget(label: 'New Arrivals'),
                 ),
                 SizedBox(
-                  height: size.height * 0.22,
+                  height: 190,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -236,28 +240,36 @@ class _HomeScreenState extends State<HomeScreen>
                   padding: EdgeInsets.fromLTRB(12, 22, 12, 12),
                   child: TitlesTextWidget(label: 'Trending Products'),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 0.62,
-                    ),
-                    itemCount: productsProvider.getProducts.length > 8
-                        ? 8
-                        : productsProvider.getProducts.length,
-                    itemBuilder: (context, index) {
-                      return ProductWidget(
-                        productId:
-                            productsProvider.getProducts[index].productId,
-                      );
-                    },
-                  ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final columns = constraints.maxWidth >= 1050
+                        ? 4
+                        : constraints.maxWidth >= 700
+                            ? 3
+                            : 2;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
+                          childAspectRatio: 0.68,
+                        ),
+                        itemCount: productsProvider.getProducts.length > 8
+                            ? 8
+                            : productsProvider.getProducts.length,
+                        itemBuilder: (context, index) {
+                          return ProductWidget(
+                            productId:
+                                productsProvider.getProducts[index].productId,
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
               ],
 
@@ -283,9 +295,11 @@ class _HomeScreenState extends State<HomeScreen>
 
               const SizedBox(height: 20),
             ],
+            ),
           ),
         ),
       ),
+    ),
     );
   }
 }

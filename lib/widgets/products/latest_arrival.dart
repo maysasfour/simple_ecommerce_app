@@ -1,4 +1,3 @@
-import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_ecommerce_app/providers/viewed_recently_provider.dart';
@@ -9,13 +8,13 @@ import '../../screens/inner_screen/product_details.dart';
 import '../../services/my_app_functions.dart';
 import '../subtitle_text.dart';
 import 'heart_btn.dart';
+import 'product_image.dart';
 
 class LatestArrivalProductsWidget extends StatelessWidget {
   const LatestArrivalProductsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     final productsModel = Provider.of<ProductModel>(context);
     final cartProvider = Provider.of<CartProvider>(context);
 
@@ -29,17 +28,17 @@ class LatestArrivalProductsWidget extends StatelessWidget {
               arguments: productsModel.productId);
         },
         child: SizedBox(
-          width: size.width * 0.45,
+          width: 300,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Flexible(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12.0),
-                  child: FancyShimmerImage(
+                  child: ProductImage(
                     imageUrl: productsModel.productImage,
-                    height: size.width * 0.24,
-                    width: size.width * 0.32,
+                    height: 145,
+                    width: 125,
                   ),
                 ),
               ),

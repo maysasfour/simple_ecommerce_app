@@ -72,23 +72,32 @@ class _RootScreenState extends State<RootScreen> {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     return Scaffold(
-      body: PageView(
-        physics: const NeverScrollableScrollPhysics(),
-        controller: controller,
-        children: screens,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1280),
+          child: PageView(
+            physics: const NeverScrollableScrollPhysics(),
+            controller: controller,
+            children: screens,
+          ),
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentScreen,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 10,
-        height: kBottomNavigationBarHeight,
-        onDestinationSelected: (index) {
-          setState(() {
-            currentScreen = index;
-          });
-          controller.jumpToPage(currentScreen);
-        },
-        destinations: [
+      bottomNavigationBar: Center(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1280),
+          child: NavigationBar(
+            selectedIndex: currentScreen,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 10,
+            height: kBottomNavigationBarHeight,
+            onDestinationSelected: (index) {
+              setState(() {
+                currentScreen = index;
+              });
+              controller.jumpToPage(currentScreen);
+            },
+            destinations: [
           const NavigationDestination(
             selectedIcon: Icon(IconlyBold.home),
             icon: Icon(IconlyLight.home),
@@ -114,7 +123,9 @@ class _RootScreenState extends State<RootScreen> {
             icon: Icon(IconlyLight.profile),
             label: "Profile",
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

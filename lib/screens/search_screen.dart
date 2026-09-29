@@ -220,7 +220,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: DynamicHeightGridView(
                         itemCount: results.length,
-                        crossAxisCount: 2,
+                        crossAxisCount:
+                            MediaQuery.sizeOf(context).width >= 1050
+                                ? 4
+                                : MediaQuery.sizeOf(context).width >= 700
+                                    ? 3
+                                    : 2,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
                         builder: (context, index) {
